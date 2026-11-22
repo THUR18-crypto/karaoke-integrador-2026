@@ -1,50 +1,177 @@
+
 "use strict";
 
-// Roteiro: implemente uma tarefa por vez e confira o resultado na interface.
-// catalogo.js já oferece consultarApi(caminho, opcoes), carregarMusicas(),
-// limparSelecao(), mostrarMensagem(id, texto, erro) e definirCatalogoOcupado(bool).
-// consultarApi retorna o JSON em sucesso e lança Error em HTTP/rede inválidos.
-// estadoCatalogo.musicaSelecionada contém o detalhe da música selecionada.
-// O evento musica-selecionada entrega esse detalhe em evento.detail, ou null.
-// IDs: formulario-musica, nome, artista, salvar-musica, excluir-musica,
-// nova-musica, titulo-formulario e estado-formulario.
-// Os controles de escrita ficam desabilitados no HTML enquanto são tarefas.
-// Não basta habilitar um botão: integre a operação e trate sua resposta.
+let idEmEdicao = null;
+let envioEmAndamento = false;
 
-function impedirEnvioPendente(evento) {
-  evento.preventDefault();
-  mostrarMensagem("estado-formulario", "Cadastro e edição ainda precisam ser integrados nas tarefas.");
+const formulario = document.getElementById("formulario-musica");
+const campoNome = document.getElementById("nome");
+const campoArtista = document.getElementById("artista");
+const botaoSalvar = document.getElementById("salvar-musica");
+const botaoExcluir = document.getElementById("excluir-musica");
+const botaoNova = document.getElementById("nova-musica");
+const tituloFormulario = document.getElementById("titulo-formulario");
+
+function atualizarControles() {
+    campoNome.disabled = envioEmAndamento;
+    campoArtista.disabled = envioEmAndamento;
+    botaoSalvar.disabled = envioEmAndamento;
+    botaoNova.disabled = envioEmAndamento;
+    botaoExcluir.disabled = envioEmAndamento || idEmEdicao === null;
 }
 
 function apresentarSelecao(evento) {
-  let musica = evento.detail;
-  document.getElementById("nome").value = musica ? musica.nome : "";
-  document.getElementById("artista").value = musica ? musica.artista.nome : "";
-  mostrarMensagem("estado-formulario", musica ? "Dados consultados. Edição e exclusão pendentes de integração." : "");
+    const musica = evento.detail;
+
+    idEmEdicao = musica ? musica.id : null;
+
+    campoNome.value = musica ? musica.nome : "";
+    campoArtista.value = musica ? musica.artista.nome : "";
+
+    tituloFormulario.textContent = musica
+        ? "Editar música"
+        : "Cadastrar música";
+
+    botaoSalvar.textContent = musica
+        ? "Salvar alterações"
+        : "Cadastrar música";
+
+    mostrarMensagem(
+        "estado-formulario",
+        musica ? "Editando: " + musica.nome : ""
+    );
+
+    atualizarControles();
 }
 
-// TODO 1 — CADASTRO: criar salvarMusica(evento), bloquear envio padrão e duplo
-// envio, ler nome/artista com trim e validar vazios. Usar consultarApi com POST
-// /api/musicas, Content-Type application/json e JSON.stringify({nome, artista}).
-// Sucesso: HTTP 201 retorna {id,nome,artista:{id,nome},partes:[]}; partes vazias
-// são válidas. Limpar seleção/formulário, await carregarMusicas() e informar
-// o resultado. Falhas devem mostrar erro, preservar campos e nunca sucesso.
-// Substituir o listener impedirEnvioPendente e habilitar salvar-musica quando
-// a integração estiver pronta. A API e o DAO de apoio já estão disponíveis.
+function prepararCadastro() {
+    limparSelecao();
 
-// TODO 2 — EDIÇÃO: aproveitar apresentarSelecao para guardar o ID em edição,
-// preencher os campos e mudar título/botão. Em salvarMusica, selecionar PUT
-// /api/musicas/:id para uma música em edição, com o mesmo JSON. HTTP 200
-// retorna o detalhe atualizado. Criar prepararCadastro para limparSelecao(),
-// limpar campos e voltar ao modo POST; ligar e habilitar nova-musica.
-// Durante o envio, desabilitar controles e usar definirCatalogoOcupado(true).
-// Restaurar controles no finally; não perder os campos quando ocorrer falha.
+    idEmEdicao = null;
+    campoNome.value = "";
+    campoArtista.value = "";
 
-// TODO 3 — EXCLUSÃO: criar excluirMusica(), exigir seleção e window.confirm,
-// e enviar DELETE /api/musicas/:id somente após confirmar. HTTP 200 retorna
-// {mensagem,musica}. Limpar seleção/formulário, await carregarMusicas() e
-// mostrar resultado. Ligar excluir-musica e habilitá-lo apenas com seleção.
-// Cancelar a confirmação não altera dados. Tratar falhas e envio duplicado.
+    tituloFormulario.textContent = "Cadastrar música";
+    botaoSalvar.textContent = "Cadastrar música";
 
-document.getElementById("formulario-musica").addEventListener("submit", impedirEnvioPendente);
+    mostrarMensagem("estado-formulario", "");
+
+    atualizarControles();
+    campoNome.focus();
+}
+
+async function salvarMusica(evento) {
+    evento.preventDefault();
+
+    if (envioEmAndamento) return;
+
+    const nome = campoNome.value.trim();
+    const artista = campoArtista.value.trim();
+
+    if (!nome || !artista) {
+        mostrarMensagem(
+            "estado-formulario",
+            "Preencha o nome da música e o artista.",
+            true
+        );
+        return;
+    }
+
+    const editando = idEmEdicao !== null;
+
+    const caminho = editando
+        ? `/api/musicas/${idEmEdicao}`
+        : "/api/musicas";
+
+    envioEmAndamento = true;
+    atualizarControles();
+    definirCatalogoOcupado(true);
+
+    mostrarMensagem("estado-formulario", "Salvando música...");
+
+    try {
+        await consultarApi(caminho, {
+            method: editando ? "PUT" : "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ nome, artista })
+        });
+
+        prepararCadastro();
+        await carregarMusicas();
+
+        mostrarMensagem(
+            "estado-formulario",
+            editando
+                ? "Música atualizada com sucesso!"
+                : "Música cadastrada com sucesso!"
+        );
+
+    } catch (erro) {
+        mostrarMensagem(
+            "estado-formulario",
+            "Erro ao salvar música: " + erro.message,
+            true
+        );
+
+    } finally {
+        envioEmAndamento = false;
+        definirCatalogoOcupado(false);
+        atualizarControles();
+    }
+}
+
+async function excluirMusica() {
+    if (envioEmAndamento || idEmEdicao === null) return;
+
+    const nome = campoNome.value;
+
+    const confirmar = window.confirm(
+        `Deseja realmente excluir a música "${nome}"?`
+    );
+
+    if (!confirmar) return;
+
+    envioEmAndamento = true;
+    atualizarControles();
+    definirCatalogoOcupado(true);
+
+    mostrarMensagem("estado-formulario", "Excluindo música...");
+
+    try {
+        await consultarApi(`/api/musicas/${idEmEdicao}`, {
+            method: "DELETE"
+        });
+
+        prepararCadastro();
+        await carregarMusicas();
+
+        mostrarMensagem(
+            "estado-formulario",
+            "Música excluída com sucesso!"
+        );
+
+    } catch (erro) {
+        mostrarMensagem(
+            "estado-formulario",
+            "Erro ao excluir música: " + erro.message,
+            true
+        );
+
+    } finally {
+        envioEmAndamento = false;
+        definirCatalogoOcupado(false);
+        atualizarControles();
+    }
+}
+
+formulario.addEventListener("submit", salvarMusica);
+
 document.addEventListener("musica-selecionada", apresentarSelecao);
+
+botaoNova.addEventListener("click", prepararCadastro);
+
+botaoExcluir.addEventListener("click", excluirMusica);
+
+atualizarControles();
