@@ -4,6 +4,8 @@
 **Professor:** Élder F. F. Bernardi
 **Tutor da atividade:** Prof. Leonardo Constantin  
 
+**Responsáveis pelo Projeto:** Arthur de Oliveira Soares & Isabela Rezer
+
 **Base de retomada opcional. Consulta e player prontos; as tarefas de integração estão em `public/admin.js`. Receber esta base não reduz a nota.**
 
 ## Preparar e executar
@@ -53,3 +55,46 @@ Conferir cadastro, consulta, edição e exclusão pela tela; entradas vazias; me
 Comece executando a consulta pronta. Em `public/admin.js`, complete TODO 1 (cadastro), TODO 2 (edição) e TODO 3 (exclusão). Use as funções e os IDs que já aparecem no arquivo. Para cada tarefa: faça uma operação, confira a resposta, consulte novamente e explique ao colega o que mudou. Os controles de escrita começam indisponíveis; habilite-os ao concluir a tarefa correspondente. O submit já é interceptado para não recarregar a página nem simular cadastro pronto.
 
 A referência completa é material do professor. O roteiro e o enunciado serão fornecidos separadamente; esta pasta contém apenas a base de código.
+
+
+**Sobre os resultados e registros**
+
+
+## Funcionalidades implementadas
+
+- **Consulta:** listagem e seleção das músicas cadastradas.
+- **Cadastro:** criação de músicas pela interface, informando título e artista.
+- **Edição:** alteração dos dados de uma música existente, preservando seu ID.
+- **Exclusão:** remoção de músicas com confirmação do usuário.
+- **Validação:** impedimento de cadastro ou edição com campos obrigatórios vazios.
+- **Feedback:** apresentação de mensagens de sucesso e erro durante as operações.
+
+Músicas sem partes podem ser cadastradas, mas não podem ser reproduzidas até que tenham partes associadas.
+
+## Registro de testes
+
+| Teste | Resultado |
+| Acesso à página pública | [Concluído] |
+| Consulta de músicas pela API | [Concluído] |
+| Cadastro de música | [Concluído] |
+| Edição preservando o ID | [Concluído] |
+| Exclusão com confirmação | [Concluído] |
+| Validação de campos vazios | [Concluído] |
+| Reprodução da música de exemplo | [Concluído] |
+| Persistência após reiniciar o servidor | [Concluído] |
+
+**Dificuldade encontrada:** [Não houve tanta dificuldade por conta dos guias do projeto, houve apenas um erro envolvendo a exclusão e reprodução de música]
+
+**Como foi resolvida:** [Erro de digitação que foi solucionado rapidamente, 
+o erro eram alguns "{}" mal posicionados e falta de alguns ";"]
+
+## Utilização de inteligência artificial
+
+Foi utilizado o ChatGPT como ferramenta de apoio durante o desenvolvimento.
+
+A ferramenta auxiliou na compreensão do código existente, na configuração das operações de cadastro, edição e exclusão e na identificação de possíveis ajustes.
+
+As alterações foram aplicadas e verificadas por meio da execução local da aplicação e dos testes das funcionalidades.
+
+## Link para teste
+https://karaoke-integrador-2026.onrender.com/
